@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Associações - Gerenciador de Projetos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            color: white;
+            transform: translateY(-1px);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        .alert-custom {
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-project-diagram me-2"></i>
+                Gerenciador de Projetos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="projetos.html">Projetos</a>
+                    </li>
+                                         <li class="nav-item">
+                         <a class="nav-link active" href="associacoes.html">Associações</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="logs.html">Logs</a>
+                     </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alert de Regras de Negócio -->
+        <div class="alert alert-custom alert-info" role="alert">
+            <h6 class="alert-heading">
+                <i class="fas fa-info-circle me-2"></i>
+                Regras de Negócio
+            </h6>
+            <ul class="mb-0">
+                <li>Um funcionário pode estar associado a no máximo <strong>2 projetos</strong></li>
+                <li>Não é possível associar o mesmo funcionário ao mesmo projeto mais de uma vez</li>
+                <li>Funcionários que trabalham em múltiplos projetos são destacados na lista</li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <!-- Formulário de Associação -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-link me-2"></i>
+                            Associar Funcionário a Projeto
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="associationForm">
+                            <div class="mb-3">
+                                <label for="employeeId" class="form-label">Funcionário</label>
+                                <select class="form-select" id="employeeId" name="employeeId" required>
+                                    <option value="">Selecione um funcionário</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="projectId" class="form-label">Projeto</label>
+                                <select class="form-select" id="projectId" name="projectId" required>
+                                    <option value="">Selecione um projeto</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-custom w-100">
+                                <i class="fas fa-plus me-2"></i>
+                                Criar Associação
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Estatísticas -->
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Estatísticas
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 id="totalEmployees">0</h4>
+                                <small class="text-muted">Funcionários</small>
+                            </div>
+                            <div class="col-6">
+                                <h4 id="totalProjects">0</h4>
+                                <small class="text-muted">Projetos</small>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="text-center">
+                            <h4 id="multipleProjects">0</h4>
+                            <small class="text-muted">Em múltiplos projetos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Associações -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Associações Existentes
+                        </h5>
+                        <button class="btn btn-dark btn-sm" onclick="loadAssociations()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Funcionário</th>
+                                        <th>Projeto</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="associationsTableBody">
+                                    <!-- Dados serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="loadingMessage" class="text-center d-none">
+                            <div class="spinner-border text-warning" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Funcionários em Múltiplos Projetos -->
+                <div class="card mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-star me-2"></i>
+                            Funcionários em Múltiplos Projetos
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Quantidade de Projetos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="multipleProjectsTableBody">
+                                    <!-- Dados serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carregar dados ao iniciar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees();
+            loadProjects();
+            loadAssociations();
+            loadMultipleProjects();
+            loadStats();
+        });
+
+        // Formulário de associação
+        document.getElementById('associationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createAssociation();
+        });
+
+        // Função para carregar funcionários
+        async function loadEmployees() {
+            try {
+                const response = await fetch('/api/employees');
+                const employees = await response.json();
+                
+                const select = document.getElementById('employeeId');
+                select.innerHTML = '<option value="">Selecione um funcionário</option>';
+                
+                employees.forEach(employee => {
+                    const option = document.createElement('option');
+                    option.value = employee.id;
+                    option.textContent = `${employee.name} (ID: ${employee.id})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar funcionários:', error);
+            }
+        }
+
+        // Função para carregar projetos
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects');
+                const projects = await response.json();
+                
+                const select = document.getElementById('projectId');
+                select.innerHTML = '<option value="">Selecione um projeto</option>';
+                
+                projects.forEach(project => {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.textContent = `${project.name} (ID: ${project.id})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar projetos:', error);
+            }
+        }
+
+        // Função para criar associação
+        async function createAssociation() {
+            const employeeId = document.getElementById('employeeId').value;
+            const projectId = document.getElementById('projectId').value;
+
+            if (!employeeId || !projectId) {
+                alert('Por favor, selecione um funcionário e um projeto');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/employees/${employeeId}/projects/${projectId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Associação criada com sucesso!');
+                    document.getElementById('associationForm').reset();
+                    loadAssociations();
+                    loadMultipleProjects();
+                    loadStats();
+                } else {
+                    const errorText = await response.text();
+                    alert(`Erro ao criar associação: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao criar associação');
+            }
+        }
+
+        // Função para carregar associações
+        async function loadAssociations() {
+            const tableBody = document.getElementById('associationsTableBody');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            tableBody.innerHTML = '';
+            loadingMessage.classList.remove('d-none');
+
+            try {
+                // Como não temos um endpoint específico para listar associações,
+                // vamos mostrar uma mensagem informativa
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            <i class="fas fa-info-circle me-2"></i>
+                            As associações são gerenciadas através do formulário acima.
+                            <br>
+                            <small>Use a funcionalidade de associação para conectar funcionários a projetos.</small>
+                        </td>
+                    </tr>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar associações</td></tr>';
+            } finally {
+                loadingMessage.classList.add('d-none');
+            }
+        }
+
+        // Função para carregar funcionários em múltiplos projetos
+        async function loadMultipleProjects() {
+            const tableBody = document.getElementById('multipleProjectsTableBody');
+            
+            try {
+                const response = await fetch('/api/employees/multiple-projects');
+                const employees = await response.json();
+
+                tableBody.innerHTML = '';
+                
+                if (employees.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Nenhum funcionário em múltiplos projetos</td></tr>';
+                } else {
+                    employees.forEach(employee => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${employee[0]}</td>
+                            <td>${employee[1]}</td>
+                            <td><span class="badge bg-success">${employee[2]}</span></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+            }
+        }
+
+        // Função para carregar estatísticas
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalEmployees').textContent = stats.totalEmployees;
+                document.getElementById('totalProjects').textContent = stats.totalProjects || 0;
+                document.getElementById('multipleProjects').textContent = stats.employeesOnMultipleProjects;
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+    </script>
+</body>
+</html>

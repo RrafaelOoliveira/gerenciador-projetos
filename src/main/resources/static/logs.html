@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs do Sistema - Gerenciador de Projetos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .log-entry {
+            transition: background-color 0.2s ease;
+        }
+        .log-entry:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+        .log-success {
+            border-left: 4px solid #28a745;
+        }
+        .log-failure {
+            border-left: 4px solid #dc3545;
+        }
+        .log-create {
+            border-left: 4px solid #17a2b8;
+        }
+        .log-update {
+            border-left: 4px solid #ffc107;
+        }
+        .log-delete {
+            border-left: 4px solid #6c757d;
+        }
+        .log-association {
+            border-left: 4px solid #6f42c1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-project-diagram me-2"></i>
+                Gerenciador de Projetos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="projetos.html">Projetos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="associacoes.html">Associações</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="logs.html">Logs</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-alt me-2"></i>
+                            Logs do Sistema
+                        </h5>
+                        <div>
+                            <button class="btn btn-light btn-sm me-2" onclick="loadLogs()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Atualizar
+                            </button>
+                            <button class="btn btn-light btn-sm" onclick="clearLogs()">
+                                <i class="fas fa-trash me-1"></i>
+                                Limpar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filtros -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="operationFilter" class="form-label">Filtrar por Operação</label>
+                                <select class="form-select" id="operationFilter" onchange="filterLogs()">
+                                    <option value="">Todas as operações</option>
+                                    <option value="CREATE">Criação</option>
+                                    <option value="UPDATE">Atualização</option>
+                                    <option value="DELETE">Exclusão</option>
+                                    <option value="SUCCESS">Sucesso</option>
+                                    <option value="FAILURE">Falha</option>
+                                    <option value="ASSOCIATION">Associação</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="searchFilter" class="form-label">Buscar</label>
+                                <input type="text" class="form-control" id="searchFilter" placeholder="Digite para buscar..." onkeyup="filterLogs()">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateFilter" class="form-label">Data</label>
+                                <input type="date" class="form-control" id="dateFilter" onchange="filterLogs()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="exportLogs()">
+                                        <i class="fas fa-download me-1"></i>
+                                        Exportar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estatísticas -->
+                        <div class="row mb-3">
+                            <div class="col-md-2">
+                                <div class="card bg-success text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="totalLogs">0</h6>
+                                        <small>Total</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-primary text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="createLogs">0</h6>
+                                        <small>Criações</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-warning text-dark text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="updateLogs">0</h6>
+                                        <small>Atualizações</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-danger text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="deleteLogs">0</h6>
+                                        <small>Exclusões</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-info text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="associationLogs">0</h6>
+                                        <small>Associações</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-secondary text-white text-center">
+                                    <div class="card-body py-2">
+                                        <h6 class="mb-0" id="errorLogs">0</h6>
+                                        <small>Erros</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Logs -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Operação</th>
+                                        <th>Detalhes</th>
+                                        <th>Data/Hora</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logsTableBody">
+                                    <!-- Dados serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="loadingMessage" class="text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let allLogs = [];
+        let filteredLogs = [];
+
+        // Carregar logs ao iniciar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs();
+        });
+
+        // Função para carregar logs
+        async function loadLogs() {
+            const tableBody = document.getElementById('logsTableBody');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            tableBody.innerHTML = '';
+            loadingMessage.classList.remove('d-none');
+
+            try {
+                const response = await fetch('/api/logs');
+                allLogs = await response.json();
+                filteredLogs = [...allLogs];
+                
+                displayLogs();
+                updateStats();
+            } catch (error) {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar logs</td></tr>';
+            } finally {
+                loadingMessage.classList.add('d-none');
+            }
+        }
+
+        // Função para exibir logs
+        function displayLogs() {
+            const tableBody = document.getElementById('logsTableBody');
+            tableBody.innerHTML = '';
+
+            if (filteredLogs.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum log encontrado</td></tr>';
+                return;
+            }
+
+            filteredLogs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = `log-entry log-${log.operation.toLowerCase()}`;
+                
+                const timestamp = new Date(log.timestamp).toLocaleString('pt-BR');
+                
+                row.innerHTML = `
+                    <td>${log.id}</td>
+                    <td>
+                        <span class="badge bg-${getOperationColor(log.operation)}">
+                            ${log.operation}
+                        </span>
+                    </td>
+                    <td>${log.details}</td>
+                    <td>${timestamp}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info" onclick="viewLogDetails(${log.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Função para obter cor da operação
+        function getOperationColor(operation) {
+            switch (operation) {
+                case 'CREATE': return 'primary';
+                case 'UPDATE': return 'warning';
+                case 'DELETE': return 'danger';
+                case 'SUCCESS': return 'success';
+                case 'FAILURE': return 'danger';
+                case 'ASSOCIATION': return 'info';
+                default: return 'secondary';
+            }
+        }
+
+        // Função para filtrar logs
+        function filterLogs() {
+            const operationFilter = document.getElementById('operationFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            filteredLogs = allLogs.filter(log => {
+                // Filtro por operação
+                if (operationFilter && log.operation !== operationFilter) {
+                    return false;
+                }
+
+                // Filtro por texto
+                if (searchFilter && !log.details.toLowerCase().includes(searchFilter)) {
+                    return false;
+                }
+
+                // Filtro por data
+                if (dateFilter) {
+                    const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+                    if (logDate !== dateFilter) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            displayLogs();
+        }
+
+        // Função para atualizar estatísticas
+        function updateStats() {
+            const stats = {
+                total: allLogs.length,
+                create: allLogs.filter(log => log.operation === 'CREATE').length,
+                update: allLogs.filter(log => log.operation === 'UPDATE').length,
+                delete: allLogs.filter(log => log.operation === 'DELETE').length,
+                association: allLogs.filter(log => log.operation === 'ASSOCIATION').length,
+                error: allLogs.filter(log => log.operation === 'FAILURE').length
+            };
+
+            document.getElementById('totalLogs').textContent = stats.total;
+            document.getElementById('createLogs').textContent = stats.create;
+            document.getElementById('updateLogs').textContent = stats.update;
+            document.getElementById('deleteLogs').textContent = stats.delete;
+            document.getElementById('associationLogs').textContent = stats.association;
+            document.getElementById('errorLogs').textContent = stats.error;
+        }
+
+        // Função para visualizar detalhes do log
+        function viewLogDetails(logId) {
+            const log = allLogs.find(l => l.id === logId);
+            if (log) {
+                const details = `
+                    ID: ${log.id}
+                    Operação: ${log.operation}
+                    Detalhes: ${log.details}
+                    Data/Hora: ${new Date(log.timestamp).toLocaleString('pt-BR')}
+                `;
+                alert(details);
+            }
+        }
+
+        // Função para limpar logs (apenas limpa os filtros)
+        function clearLogs() {
+            document.getElementById('operationFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            filteredLogs = [...allLogs];
+            displayLogs();
+        }
+
+        // Função para exportar logs
+        function exportLogs() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "ID,Operação,Detalhes,Data/Hora\n"
+                + filteredLogs.map(log => 
+                    `${log.id},"${log.operation}","${log.details}","${new Date(log.timestamp).toLocaleString('pt-BR')}"`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `logs_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

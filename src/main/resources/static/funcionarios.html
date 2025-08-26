@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Funcionários - Gerenciador de Projetos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            color: white;
+            transform: translateY(-1px);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-project-diagram me-2"></i>
+                Gerenciador de Projetos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="funcionarios.html">Funcionários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="projetos.html">Projetos</a>
+                    </li>
+                                         <li class="nav-item">
+                         <a class="nav-link" href="associacoes.html">Associações</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="logs.html">Logs</a>
+                     </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Formulário de Cadastro -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Cadastrar Funcionário
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="employeeForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nome</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="salary" class="form-label">Salário</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control" id="salary" name="salary" 
+                                           step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-custom w-100">
+                                <i class="fas fa-save me-2"></i>
+                                Salvar Funcionário
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Funcionários -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Funcionários Cadastrados
+                        </h5>
+                        <button class="btn btn-light btn-sm" onclick="loadEmployees()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Salário</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeesTableBody">
+                                    <!-- Dados serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="loadingMessage" class="text-center d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Funcionário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSalary" class="form-label">Salário</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="editSalary" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="updateEmployee()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carregar funcionários ao iniciar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployees();
+        });
+
+        // Formulário de cadastro
+        document.getElementById('employeeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createEmployee();
+        });
+
+        // Função para criar funcionário
+        async function createEmployee() {
+            const formData = new FormData(document.getElementById('employeeForm'));
+            const employee = {
+                name: formData.get('name'),
+                salary: parseFloat(formData.get('salary'))
+            };
+
+            try {
+                const response = await fetch('/api/employees', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(employee)
+                });
+
+                if (response.ok) {
+                    alert('Funcionário cadastrado com sucesso!');
+                    document.getElementById('employeeForm').reset();
+                    loadEmployees();
+                } else {
+                    alert('Erro ao cadastrar funcionário');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar funcionário');
+            }
+        }
+
+        // Função para carregar funcionários
+        async function loadEmployees() {
+            const tableBody = document.getElementById('employeesTableBody');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            tableBody.innerHTML = '';
+            loadingMessage.classList.remove('d-none');
+
+            try {
+                const response = await fetch('/api/employees');
+                const employees = await response.json();
+
+                employees.forEach(employee => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${employee.id}</td>
+                        <td>${employee.name}</td>
+                        <td>R$ ${employee.salary.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editEmployee(${employee.id}, '${employee.name}', ${employee.salary})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${employee.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar funcionários</td></tr>';
+            } finally {
+                loadingMessage.classList.add('d-none');
+            }
+        }
+
+        // Função para editar funcionário
+        function editEmployee(id, name, salary) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editSalary').value = salary;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        // Função para atualizar funcionário
+        async function updateEmployee() {
+            const id = document.getElementById('editId').value;
+            const employee = {
+                id: parseInt(id),
+                name: document.getElementById('editName').value,
+                salary: parseFloat(document.getElementById('editSalary').value)
+            };
+
+            try {
+                const response = await fetch(`/api/employees/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(employee)
+                });
+
+                if (response.ok) {
+                    alert('Funcionário atualizado com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    loadEmployees();
+                } else {
+                    alert('Erro ao atualizar funcionário');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar funcionário');
+            }
+        }
+
+        // Função para deletar funcionário
+        async function deleteEmployee(id) {
+            if (confirm('Tem certeza que deseja excluir este funcionário?')) {
+                try {
+                    const response = await fetch(`/api/employees/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        alert('Funcionário excluído com sucesso!');
+                        loadEmployees();
+                    } else {
+                        alert('Erro ao excluir funcionário');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir funcionário');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

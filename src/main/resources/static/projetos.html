@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Projetos - Gerenciador de Projetos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+        }
+        .btn-custom:hover {
+            color: white;
+            transform: translateY(-1px);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-project-diagram me-2"></i>
+                Gerenciador de Projetos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="funcionarios.html">Funcionários</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="projetos.html">Projetos</a>
+                    </li>
+                                         <li class="nav-item">
+                         <a class="nav-link" href="associacoes.html">Associações</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="logs.html">Logs</a>
+                     </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Formulário de Cadastro -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-folder-plus me-2"></i>
+                            Cadastrar Projeto
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="projectForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nome do Projeto</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descrição</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Data de Início</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate">
+                            </div>
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label">Data de Término</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate">
+                            </div>
+                            <button type="submit" class="btn btn-custom w-100">
+                                <i class="fas fa-save me-2"></i>
+                                Salvar Projeto
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Projetos -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-project-diagram me-2"></i>
+                            Projetos Cadastrados
+                        </h5>
+                        <button class="btn btn-light btn-sm" onclick="loadProjects()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome</th>
+                                        <th>Descrição</th>
+                                        <th>Data Início</th>
+                                        <th>Data Término</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="projectsTableBody">
+                                    <!-- Dados serão carregados via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="loadingMessage" class="text-center d-none">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Projeto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Nome do Projeto</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStartDate" class="form-label">Data de Início</label>
+                            <input type="date" class="form-control" id="editStartDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEndDate" class="form-label">Data de Término</label>
+                            <input type="date" class="form-control" id="editEndDate">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="updateProject()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Carregar projetos ao iniciar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProjects();
+        });
+
+        // Formulário de cadastro
+        document.getElementById('projectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createProject();
+        });
+
+        // Função para criar projeto
+        async function createProject() {
+            const formData = new FormData(document.getElementById('projectForm'));
+            const project = {
+                name: formData.get('name'),
+                description: formData.get('description') || '',
+                startDate: formData.get('startDate') || null,
+                endDate: formData.get('endDate') || null
+            };
+
+            try {
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(project)
+                });
+
+                if (response.ok) {
+                    alert('Projeto cadastrado com sucesso!');
+                    document.getElementById('projectForm').reset();
+                    loadProjects();
+                } else {
+                    alert('Erro ao cadastrar projeto');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar projeto');
+            }
+        }
+
+        // Função para carregar projetos
+        async function loadProjects() {
+            const tableBody = document.getElementById('projectsTableBody');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            tableBody.innerHTML = '';
+            loadingMessage.classList.remove('d-none');
+
+            try {
+                const response = await fetch('/api/projects');
+                const projects = await response.json();
+
+                projects.forEach(project => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${project.id}</td>
+                        <td>${project.name}</td>
+                        <td>${project.description || '-'}</td>
+                        <td>${project.startDate || '-'}</td>
+                        <td>${project.endDate || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="editProject(${project.id}, '${project.name}', '${project.description || ''}', '${project.startDate || ''}', '${project.endDate || ''}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProject(${project.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Erro ao carregar projetos</td></tr>';
+            } finally {
+                loadingMessage.classList.add('d-none');
+            }
+        }
+
+        // Função para editar projeto
+        function editProject(id, name, description, startDate, endDate) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editDescription').value = description;
+            document.getElementById('editStartDate').value = startDate;
+            document.getElementById('editEndDate').value = endDate;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        // Função para atualizar projeto
+        async function updateProject() {
+            const id = document.getElementById('editId').value;
+            const project = {
+                id: parseInt(id),
+                name: document.getElementById('editName').value,
+                description: document.getElementById('editDescription').value,
+                startDate: document.getElementById('editStartDate').value || null,
+                endDate: document.getElementById('editEndDate').value || null
+            };
+
+            try {
+                const response = await fetch(`/api/projects/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(project)
+                });
+
+                if (response.ok) {
+                    alert('Projeto atualizado com sucesso!');
+                    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+                    loadProjects();
+                } else {
+                    alert('Erro ao atualizar projeto');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar projeto');
+            }
+        }
+
+        // Função para deletar projeto
+        async function deleteProject(id) {
+            if (confirm('Tem certeza que deseja excluir este projeto?')) {
+                try {
+                    const response = await fetch(`/api/projects/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        alert('Projeto excluído com sucesso!');
+                        loadProjects();
+                    } else {
+                        alert('Erro ao excluir projeto');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    alert('Erro ao excluir projeto');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
